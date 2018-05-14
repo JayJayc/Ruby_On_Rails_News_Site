@@ -1,0 +1,73 @@
+  <%= link_to('News comments id '+ new.id.to_s, {:action =>"item", :id => new.id}) %>
+  
+          <%= link_to('News comments id '+ item.id.to_s, {:action =>"item", :id => item.id}) %>
+class ItemController < ApplicationController
+    
+    def index
+        @items = Item.all
+        # @comments = Item.find_all_by_news_id(:item.id)
+    end
+    
+    def create
+        
+        item = Item.new(item_params)
+        if item.save
+            session[:item_id] = item.id
+            redirect_to :back
+        else
+            flash[:item_errors] = item.errors.full_messages
+            redirect_to '/home'
+        end
+    end
+    
+      
+    def feed
+        @id = params['id']
+        @news = News.all
+        @comments = Comment.all
+        @items = Item.all
+        render('item')
+    end
+    
+     private 
+        def item_params
+            params.require(:item).permit(:content, :source, :item_type, :news_id)
+        end
+
+end
+
+index.html
+
+<% content_for :title, "Create a news" %>
+
+<!-- get news data from form and post to /news-->
+<h1>Submit news</h1>
+ <form action="/items" method="POST">
+            <input type="hidden" name="authenticity_token" value="<%=form_authenticity_token%>">
+            <input type="hidden" name="item[item_type]" value="news">
+            <input type="content" name="item[content]" placeholder="content">
+            <input type="source" name="item[source]" placeholder="source">
+            <input type="submit" name="submit" class="submit">
+ </form>
+ 
+ <!--<table>-->
+ <!-- <tr>-->
+ <!--   <th>News</th>-->
+ <!-- </tr>-->
+  <% if @items != nil %>
+    <h1>News</h1>
+    <% @items.each do |item| %>
+    <% if item.item_type === "news" %>
+    
+    <div>
+      <h2><%= item.content %></h2>
+      <p> by user | <% item.created_at %> | 
+        <% count = Item.select(:id).where(:news_id => item.id).count %>
+        <%= link_to('comments ' + count.to_s , {:action =>"feed", :id => item.id}) %>
+      </p>
+    </div>
+    <% end %>
+    <% end %>
+  <% end %>
+  <!--</table>-->
+  
